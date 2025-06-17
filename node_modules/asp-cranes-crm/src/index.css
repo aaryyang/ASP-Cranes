@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Remove spinners from number inputs */
+@layer base {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  
+  /* Better placeholder styling */
+  ::placeholder {
+    color: #9CA3AF;
+    opacity: 0.8; 
+  }
+  /* Highlight required fields with a subtle visual cue */
+  input:required, 
+  select:required, 
+  textarea:required {
+    background-color: #EFF6FF; /* blue-50 */
+    border-color: #BFDBFE; /* blue-200 */
+  }
+
+  /* Optional fields styling */
+  input:not(:required):not(:disabled),
+  select:not(:required):not(:disabled),
+  textarea:not(:required):not(:disabled) {
+    background-color: #F0FDF4; /* green-50 */
+    border-color: #BBFCD1; /* green-200 */
+  }
+
+  /* Return to white background on focus */
+  input:required:focus, 
+  select:required:focus, 
+  textarea:required:focus,
+  input:not(:required):focus,
+  select:not(:required):focus,
+  textarea:not(:required):focus {
+    background-color: white;
+  }
+}

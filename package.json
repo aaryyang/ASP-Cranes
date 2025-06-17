@@ -1,0 +1,16 @@
+{
+  "name": "asp-cranes-solution",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start:agent": "cd packages/agent && python robust_api_server.py",
+    "start:crm": "cd packages/crm && npm run dev",
+    "start": "concurrently \"npm run start:agent\" \"npm run start:crm\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.1"
+  }
+}
