@@ -1,0 +1,12 @@
+flask==3.0.0
+google-adk
+google-auth
+google-generativeai
+vertexai
+pydantic
+pydantic-settings
+python-dotenv
+requests
+nest_asyncio
+flask-cors
+jsonschema
