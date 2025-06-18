@@ -14,8 +14,7 @@ import {
   Building2, 
   X,
   Handshake,
-  LogOut,
-  Bot
+  LogOut
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -108,18 +107,11 @@ const navItems: NavItem[] = [
     icon: <MessageSquare size={20} />,
     href: '/feedback',
     roles: ['admin', 'operations_manager'],
-  },
-  {
+  },  {
     label: 'Templates',
     icon: <FileText size={20} />,
     href: '/templates',
     roles: ['admin', 'sales_agent'],
-  },
-  {
-    label: 'AI Assistance',
-    icon: <Bot size={20} />,
-    href: '/assistance',
-    roles: ['admin', 'sales_agent', 'operations_manager', 'operator'],
   },
 ];
 

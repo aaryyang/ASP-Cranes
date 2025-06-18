@@ -1,4 +1,4 @@
-import React from 'react';
+// React Router DOM components
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
 import { AppShell } from './components/layout/AppShell';
@@ -22,7 +22,6 @@ import { DealDetails } from './pages/DealDetails';
 import { useAuthStore } from './store/authStore';
 import { QuotationTemplates } from './pages/QuotationTemplates';
 import { QuotationTemplateEditor } from './pages/QuotationTemplateEditor';
-import { AssistancePage } from './pages/AssistancePage';
 
 function DashboardRouter() {
   const { user } = useAuthStore();
@@ -70,11 +69,7 @@ function App() {
           <Route path="config/users" element={<UserManagement />} />
           <Route path="config/equipment" element={<EquipmentManagement />} />
           <Route path="config/services" element={<ServicesManagement />} />
-          
-          <Route path="feedback" element={<JobSummaryFeedback />} />
-          
-          {/* AI Assistance route */}
-          <Route path="assistance" element={<AssistancePage />} />
+            <Route path="feedback" element={<JobSummaryFeedback />} />
           
           {/* Templates routes with role protection */}
           <Route path="templates" element={<QuotationTemplates />} />

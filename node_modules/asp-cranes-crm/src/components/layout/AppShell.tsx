@@ -4,6 +4,7 @@ import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { RefreshCw } from 'lucide-react';
+import { AIAssistantWidget } from '../assistance/AIAssistantWidget';
 
 interface AppShellProps {
   requiredRole?: 'sales_agent' | 'operations_manager' | 'operator';
@@ -81,6 +82,8 @@ export function AppShell({ requiredRole, children }: AppShellProps) {
             {children || <Outlet />}
           </div>
         </main>
+        {/* AI Assistant Widget */}
+        <AIAssistantWidget />
       </div>
     </div>
   );
