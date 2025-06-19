@@ -23,3 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.*
+!.env.example
+
+# Firebase config files with API keys
+src/services/firestore/config.ts
+src/services/firestore/setupUsers.ts
+src/lib/firebase.ts
+**/config.ts
+**/firebase.ts
+service-account.json
+*service-account*.json

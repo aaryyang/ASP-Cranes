@@ -23,10 +23,18 @@ wheels/
 
 # Credentials
 service-account.json
+*service-account*.json
 .env
 .env.*
 !.env.example
+
+# Configuration files with sensitive data
+config.py
+**/config.py
+
+# IDE and editor files
 .vscode/
+.idea/
 
 # Logs
 logs/

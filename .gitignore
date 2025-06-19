@@ -31,9 +31,19 @@ env/
 # Credentials and Secrets
 service-account.json
 firebase-service-account.json
+**/service-account.json
+**/*service-account*.json
 .env
 .env.*
 !.env.example
+
+# Firebase and API configuration files
+**/firebase.ts
+**/config.ts
+**/setupUsers.ts
+packages/crm/src/services/firestore/config.ts
+packages/crm/src/services/firestore/setupUsers.ts
+packages/crm/src/lib/firebase.ts
 
 # IDE and Editor files
 .vscode/
