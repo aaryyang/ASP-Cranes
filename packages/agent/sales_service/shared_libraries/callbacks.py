@@ -26,8 +26,8 @@ from google.adk.agents.invocation_context import InvocationContext
 from google.adk.sessions.state import State
 from google.adk.tools.tool_context import ToolContext
 from jsonschema import ValidationError
-from customer_service.entities.customer import Customer
-from customer_service.integrations.crm_sync import crm_sync
+from sales_service.entities.customer import Customer
+from sales_service.integrations.crm_sync import crm_sync
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -191,7 +191,7 @@ def before_agent(callback_context: InvocationContext):
         
         # Use database service to get real user data instead of dummy data
         try:
-            from customer_service.integrations.database_service import DatabaseServiceFactory
+            from sales_service.integrations.database_service import DatabaseServiceFactory
             db_service = DatabaseServiceFactory.get_default_service()
             user_data = db_service.get_user_by_id(user_id)
             

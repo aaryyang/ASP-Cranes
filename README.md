@@ -27,7 +27,7 @@ ASP-Cranes-Agent/
 ├── packages/
 │   ├── agent/                    # Python AI Agent Backend
 │   │   ├── robust_api_server.py  # Main API server
-│   │   ├── customer_service/     # Agent logic and tools
+│   │   ├── sales_service/       # Agent logic and tools
 │   │   │   ├── agent.py          # Core agent implementation
 │   │   │   ├── config.py         # Configuration management
 │   │   │   ├── tools/            # CRM integration tools
@@ -202,14 +202,14 @@ DATABASE_URL=postgresql://user:pass@host:port/database
 ## 🔧 Development
 
 ### Adding New Tools
-1. Add tool function to `packages/agent/customer_service/tools/tools.py`
+1. Add tool function to `packages/agent/sales_service/tools/tools.py`
 2. Register tool in agent configuration
 3. Test with API calls
 
 ### Database Operations
 Use the database abstraction layer:
 ```python
-from customer_service.integrations.database_service import DatabaseServiceFactory
+from sales_service.integrations.database_service import DatabaseServiceFactory
 
 db_service = DatabaseServiceFactory.get_default_service()
 equipment = db_service.get_available_equipment()

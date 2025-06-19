@@ -16,11 +16,11 @@ from flask import Flask, request, make_response, jsonify
 from flask_cors import CORS
 
 # Import the agent and necessary ADK components
-from customer_service.agent import root_agent
-from customer_service.integrations.crm_sync import crm_sync
-from customer_service.integrations.database_service import DatabaseServiceFactory
-from customer_service.tools.tools import get_user_info
-from customer_service.config import Config
+from sales_service.agent import root_agent
+from sales_service.integrations.crm_sync import crm_sync
+from sales_service.integrations.database_service import DatabaseServiceFactory
+from sales_service.tools.tools import get_user_info
+from sales_service.config import Config
 
 from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import InMemorySessionService

@@ -19,6 +19,44 @@
     color: #9CA3AF;
     opacity: 0.8; 
   }
+
+  /* Assistant message formatting with improved markdown support */
+  .assistant-message {
+    line-height: 1.6;
+  }
+  
+  .assistant-message.prose {
+    color: #1F2937;
+  }
+
+  .assistant-message.prose strong {
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .assistant-message.prose p {
+    margin: 0.5rem 0;
+  }
+
+  .assistant-message.prose ol,
+  .assistant-message.prose ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .assistant-message.prose li {
+    margin: 0.25rem 0;
+  }
+
+  .assistant-message.prose h1,
+  .assistant-message.prose h2,
+  .assistant-message.prose h3,
+  .assistant-message.prose h4 {
+    margin: 0.75rem 0 0.5rem 0;
+    font-weight: 600;
+    color: #111827;
+  }
+
   /* Highlight required fields with a subtle visual cue */
   input:required, 
   select:required, 

@@ -16,9 +16,9 @@
 import logging
 import uuid
 from datetime import datetime
-from customer_service.integrations.crm_sync import crm_sync
+from sales_service.integrations.crm_sync import crm_sync
 # Import database service for CRM access (supports Firebase and PostgreSQL)
-from customer_service.integrations.database_service import DatabaseServiceFactory
+from sales_service.integrations.database_service import DatabaseServiceFactory
 
 # Get database service instance (defaults to Firebase)
 db_service = DatabaseServiceFactory.get_default_service()
@@ -174,47 +174,52 @@ def check_equipment_availability(
     """
     logger.info("Checking availability for %s from %s to %s", equipment_type, start_date, end_date)
     
-    # Mock availability data - in real implementation, this would query actual inventory
-    equipment_inventory = {
-        "mobile crane": {
-            "25-ton": {"available": 3, "total": 5, "hourly_rate": 150, "daily_rate": 1200},
-            "50-ton": {"available": 2, "total": 4, "hourly_rate": 250, "daily_rate": 2000},
-            "100-ton": {"available": 1, "total": 2, "hourly_rate": 400, "daily_rate": 3200}
-        },
-        "tower crane": {
-            "standard": {"available": 1, "total": 3, "hourly_rate": 300, "daily_rate": 2400},
-            "heavy-duty": {"available": 0, "total": 2, "hourly_rate": 450, "daily_rate": 3600}
-        },
-        "boom lift": {
-            "40ft": {"available": 4, "total": 6, "hourly_rate": 80, "daily_rate": 640},
-            "60ft": {"available": 2, "total": 4, "hourly_rate": 120, "daily_rate": 960},
-            "80ft": {"available": 1, "total": 2, "hourly_rate": 180, "daily_rate": 1440}
+    # Get real equipment data from database instead of mock data
+    try:
+        real_equipment = db_service.get_available_equipment()
+        available_equipment = []
+        
+        # Filter equipment based on request
+        equipment_type_lower = equipment_type.lower()
+        for equipment in real_equipment:
+            # Check if this equipment matches the requested type
+            eq_name = equipment.get('equipment_name', '').lower()
+            eq_type = equipment.get('equipment_type', '').lower()
+            
+            if (equipment_type_lower in eq_name or 
+                equipment_type_lower in eq_type or
+                any(word in eq_name for word in equipment_type_lower.split()) or
+                any(word in eq_type for word in equipment_type_lower.split())):
+                
+                available_equipment.append({
+                    "equipment_id": equipment.get('equipment_id', ''),
+                    "equipment_name": equipment.get('equipment_name', ''),
+                    "equipment_type": equipment.get('equipment_type', ''),
+                    "max_capacity": equipment.get('max_capacity', ''),
+                    "daily_rate": equipment.get('daily_rate', 0),
+                    "status": equipment.get('status', 'Available')
+                })
+        
+        return {
+            "status": "success",
+            "requested_equipment": equipment_type,
+            "date_range": f"{start_date} to {end_date}",
+            "location": location,
+            "available_equipment": available_equipment,
+            "total_options": len(available_equipment)
         }
-    }
-    
-    equipment_type_lower = equipment_type.lower()
-    available_equipment = []
-    
-    for eq_type, variants in equipment_inventory.items():
-        if equipment_type_lower in eq_type or eq_type in equipment_type_lower:
-            for variant, details in variants.items():
-                if details["available"] > 0:
-                    available_equipment.append({
-                        "equipment_type": f"{eq_type} ({variant})",
-                        "available_units": details["available"],
-                        "total_units": details["total"],
-                        "hourly_rate": details["hourly_rate"],
-                        "daily_rate": details["daily_rate"]
-                    })
-    
-    return {
-        "status": "success",
-        "requested_equipment": equipment_type,
-        "date_range": f"{start_date} to {end_date}",
-        "location": location,
-        "available_equipment": available_equipment,
-        "total_options": len(available_equipment)
-    }
+        
+    except Exception as e:
+        logger.error(f"Error checking equipment availability: {e}")
+        # Fallback to mock data if database fails
+        return {
+            "status": "error",
+            "message": "Unable to check real equipment availability",
+            "requested_equipment": equipment_type,
+            "date_range": f"{start_date} to {end_date}",
+            "available_equipment": [],
+            "total_options": 0
+        }
 
 
 def schedule_equipment_rental(
@@ -376,26 +381,27 @@ def calculate_equipment_pricing(
     """
     logger.info("Calculating pricing for %s, %d days", equipment_type, rental_duration)
     
-    # Base pricing structure
+    # Base pricing structure (in Indian Rupees - Lakhs)
     base_rates = {
         "mobile crane": {
-            "25-ton": {"daily_rate": 1200, "hourly_rate": 150, "operator_daily": 800},
-            "50-ton": {"daily_rate": 2000, "hourly_rate": 250, "operator_daily": 900},
-            "100-ton": {"daily_rate": 3200, "hourly_rate": 400, "operator_daily": 1000},
-            "150-ton": {"daily_rate": 4500, "hourly_rate": 560, "operator_daily": 1200}
+            "25-ton": {"daily_rate": 120000, "hourly_rate": 15000, "operator_daily": 8000},  # ₹1.2L/day
+            "50-ton": {"daily_rate": 200000, "hourly_rate": 25000, "operator_daily": 10000}, # ₹2L/day
+            "100-ton": {"daily_rate": 350000, "hourly_rate": 44000, "operator_daily": 12000}, # ₹3.5L/day
+            "130-ton": {"daily_rate": 450000, "hourly_rate": 56000, "operator_daily": 15000}, # ₹4.5L/day
+            "150-ton": {"daily_rate": 550000, "hourly_rate": 69000, "operator_daily": 18000}  # ₹5.5L/day
         },
         "tower crane": {
-            "standard": {"daily_rate": 2400, "hourly_rate": 300, "operator_daily": 1000},
-            "heavy-duty": {"daily_rate": 3600, "hourly_rate": 450, "operator_daily": 1200}
+            "standard": {"daily_rate": 300000, "hourly_rate": 38000, "operator_daily": 12000}, # ₹3L/day
+            "heavy-duty": {"daily_rate": 450000, "hourly_rate": 56000, "operator_daily": 15000} # ₹4.5L/day
         },
         "boom lift": {
-            "40ft": {"daily_rate": 640, "hourly_rate": 80, "operator_daily": 600},
-            "60ft": {"daily_rate": 960, "hourly_rate": 120, "operator_daily": 650},
-            "80ft": {"daily_rate": 1440, "hourly_rate": 180, "operator_daily": 700}
+            "40ft": {"daily_rate": 80000, "hourly_rate": 10000, "operator_daily": 6000},   # ₹80K/day
+            "60ft": {"daily_rate": 120000, "hourly_rate": 15000, "operator_daily": 7000},  # ₹1.2L/day
+            "80ft": {"daily_rate": 180000, "hourly_rate": 23000, "operator_daily": 8000}   # ₹1.8L/day
         },
         "rough terrain crane": {
-            "30-ton": {"daily_rate": 1400, "hourly_rate": 175, "operator_daily": 850},
-            "40-ton": {"daily_rate": 1800, "hourly_rate": 225, "operator_daily": 900}
+            "30-ton": {"daily_rate": 150000, "hourly_rate": 19000, "operator_daily": 9000}, # ₹1.5L/day
+            "40-ton": {"daily_rate": 180000, "hourly_rate": 23000, "operator_daily": 10000} # ₹1.8L/day
         }
     }
     
@@ -417,9 +423,9 @@ def calculate_equipment_pricing(
                 break
     
     if not equipment_match:
-        # Default pricing for unmatched equipment
-        base_daily_rate = 1500
-        operator_daily_rate = 800
+        # Default pricing for unmatched equipment (in Rupees)
+        base_daily_rate = 120000
+        operator_daily_rate = 6500
         equipment_match = equipment_type
     
     # Calculate base equipment cost
@@ -440,12 +446,12 @@ def calculate_equipment_pricing(
         operator_subtotal = operator_daily_rate * rental_duration
         operator_total = operator_subtotal * shift_multiplier
     
-    # Delivery and transport costs
+    # Delivery and transport costs (in Rupees)
     delivery_cost = 0
     if delivery_distance > 0:
-        delivery_cost = max(200, delivery_distance * 4.5)  # $4.50 per mile, minimum $200
-        if delivery_distance > 100:
-            delivery_cost += 500  # Long distance surcharge
+        delivery_cost = max(15000, delivery_distance * 350)  # ₹350 per km, minimum ₹15,000
+        if delivery_distance > 160:  # 100 miles = ~160 km
+            delivery_cost += 40000  # Long distance surcharge
     
     # Complexity multipliers
     complexity_multipliers = {
@@ -455,17 +461,17 @@ def calculate_equipment_pricing(
     }
     complexity_multiplier = complexity_multipliers.get(project_complexity.lower(), 1.0)
     
-    # Special requirements costs
+    # Special requirements costs (in Rupees)
     special_costs = 0
     if special_requirements:
         special_keywords = {
-            "night": 500,
-            "weekend": 300,
-            "crane pad": 800,
-            "rigging": 400,
-            "assembly": 600,
-            "disassembly": 400,
-            "permit": 250
+            "night": 40000,
+            "weekend": 25000,
+            "crane pad": 65000,
+            "rigging": 32000,
+            "assembly": 50000,
+            "disassembly": 32000,
+            "permit": 20000
         }
         for keyword, cost in special_keywords.items():
             if keyword in special_requirements.lower():
@@ -484,9 +490,9 @@ def calculate_equipment_pricing(
     equipment_total *= complexity_multiplier
     operator_total *= complexity_multiplier
     
-    # Calculate subtotal and tax
+    # Calculate subtotal and tax (GST in India)
     subtotal = equipment_total + operator_total + delivery_cost + special_costs - volume_discount
-    tax_rate = 0.08  # 8% tax
+    tax_rate = 0.18  # 18% GST
     tax_amount = subtotal * tax_rate
     total_cost = subtotal + tax_amount
     

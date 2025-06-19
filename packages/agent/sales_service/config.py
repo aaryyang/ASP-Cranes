@@ -18,7 +18,7 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../.env"))
 class AgentModel(BaseModel):
     """Agent model settings."""
 
-    name: str = Field(default="customer_service_agent")
+    name: str = Field(default="sales_service_agent")
     model: str = Field(default="gemini-2.0-flash-001")
 
 
@@ -33,7 +33,7 @@ class Config(BaseSettings):
     )
 
     agent_settings: AgentModel = Field(default=AgentModel())
-    app_name: str = "customer_service_app"
+    app_name: str = "sales_service_app"
     FLASK_ENV: str = Field(default="production")
     GOOGLE_CLOUD_PROJECT: str = Field(default="my_project")
     GOOGLE_CLOUD_LOCATION: str = Field(default="us-central1")

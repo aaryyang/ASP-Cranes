@@ -4,7 +4,7 @@ import logging
 import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from customer_service.config import Config
+from sales_service.config import Config
 
 logger = logging.getLogger(__name__)
 config = Config()
