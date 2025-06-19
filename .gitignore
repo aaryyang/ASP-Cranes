@@ -28,22 +28,20 @@ ENV/
 env/
 .ENV/
 
-# Credentials and Secrets
-service-account.json
-firebase-service-account.json
-**/service-account.json
-**/*service-account*.json
+# Environment files with sensitive data
 .env
 .env.*
 !.env.example
 
-# Firebase and API configuration files
-**/firebase.ts
-**/config.ts
-**/setupUsers.ts
-packages/crm/src/services/firestore/config.ts
-packages/crm/src/services/firestore/setupUsers.ts
-packages/crm/src/lib/firebase.ts
+# Service account JSON files (contain private keys)
+service-account.json
+firebase-service-account.json
+**/service-account.json
+**/*service-account*.json
+
+# Package files that may contain sensitive dependencies
+package-lock.json
+yarn.lock
 
 # IDE and Editor files
 .vscode/

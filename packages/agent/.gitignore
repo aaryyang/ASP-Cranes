@@ -21,16 +21,14 @@ wheels/
 .installed.cfg
 *.egg
 
-# Credentials
-service-account.json
-*service-account*.json
+# Environment files
 .env
 .env.*
 !.env.example
 
-# Configuration files with sensitive data
-config.py
-**/config.py
+# Service account files
+service-account.json
+*service-account*.json
 
 # IDE and editor files
 .vscode/
