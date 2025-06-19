@@ -1,45 +1,47 @@
-# ASP Cranes AI Agent
+# ASP Cranes AI Sales Agent
 
-An intelligent customer service agent for ASP Cranes heavy equipment rental company. This AI agent helps customers with equipment inquiries, bookings, pricing, and scheduling through natural language conversations.
+An intelligent sales agent for ASP Cranes heavy equipment rental company. This AI agent assists sales staff with lead analysis, quotation generation, equipment scheduling, and CRM operations through natural language conversations.
 
 ## 🚀 Features
 
-- **Intelligent Customer Service**: AI-powered responses to customer inquiries
-- **Equipment Management**: Real-time access to crane inventory and availability
-- **Lead Generation**: Automatic capture and processing of customer leads
-- **CRM Integration**: Seamless integration with customer database
+- **Sales Assistant**: AI-powered assistance for sales staff with lead analysis and quotations
+- **Lead Management**: Automated lead qualification, prioritization, and follow-up recommendations
+- **Equipment Availability**: Real-time access to crane inventory and scheduling
+- **Quotation Generation**: Automated pricing calculations with GST and comprehensive quotes
+- **CRM Integration**: Seamless integration with customer and lead databases
+- **Sales Analytics**: Equipment utilization analysis and sales performance insights
 - **Multi-Database Support**: Firebase Firestore with PostgreSQL migration ready
-- **Real-time Chat**: WebSocket-based chat interface
-- **User Authentication**: Secure user identification and personalization
+- **Real-time Dashboard**: Modern CRM interface for sales team operations
+- **User Authentication**: Role-based access for sales staff and managers
 
 ## 🏗️ Architecture
 
-- **Frontend**: React TypeScript application with modern UI
+- **Frontend**: React TypeScript CRM Dashboard with modern UI
 - **Backend**: Python Flask API with Google ADK (Agent Development Kit)
-- **AI Model**: Google Gemini 2.0 Flash via Vertex AI
+- **AI Model**: Google Gemini 2.0 Flash via Vertex AI (Sales-focused prompting)
 - **Database**: Firebase Firestore (with PostgreSQL abstraction layer)
-- **Authentication**: Firebase Auth integration
+- **Authentication**: Firebase Auth integration with role-based access
 
 ## 📁 Project Structure
 
 ```
 ASP-Cranes-Agent/
 ├── packages/
-│   ├── agent/                    # Python AI Agent Backend
+│   ├── agent/                    # Python AI Sales Agent Backend
 │   │   ├── robust_api_server.py  # Main API server
-│   │   ├── sales_service/       # Agent logic and tools
-│   │   │   ├── agent.py          # Core agent implementation
+│   │   ├── sales_service/       # Sales agent logic and tools
+│   │   │   ├── agent.py          # Core sales agent implementation
 │   │   │   ├── config.py         # Configuration management
-│   │   │   ├── tools/            # CRM integration tools
-│   │   │   ├── integrations/     # Database abstractions
+│   │   │   ├── tools/            # Sales tools (quotation, pricing, scheduling)
+│   │   │   ├── integrations/     # CRM and database abstractions
 │   │   │   └── shared_libraries/ # Shared utilities
 │   │   ├── .env                  # Environment configuration
 │   │   └── requirements.txt      # Python dependencies
-│   └── crm/                      # React Frontend (CRM Dashboard)
+│   └── crm/                      # React Frontend (Sales CRM Dashboard)
 │       ├── src/
-│       │   ├── components/       # React components
+│       │   ├── components/       # React components (sales interface)
 │       │   ├── services/         # API services
-│       │   ├── pages/            # Application pages
+│       │   ├── pages/            # Sales application pages
 │       │   └── types/            # TypeScript definitions
 │       ├── package.json          # Node.js dependencies
 │       └── vite.config.ts        # Vite configuration
@@ -143,22 +145,22 @@ VITE_API_BASE_URL=http://localhost:5000
 - **Chat**: `POST /agent/chat`
   ```json
   {
-    "message": "I need a 30-ton crane for tomorrow",
-    "user_id": "customer@example.com",
+    "message": "Can you help me analyze this lead? Customer wants a crane for residential project, budget under ₹20 lakhs",
+    "user_id": "sales@aspcranes.com",
     "crm_access": true
   }
   ```
 
 - **Health Check**: `GET /`
 
-### Example Chat Interaction
+### Example Sales Agent Interaction
 
 ```bash
 curl -X POST http://localhost:5000/agent/chat \
   -H "Content-Type: application/json" \
   -d '{
-    "message": "What cranes do you have available?",
-    "user_id": "test@aspcranes.com",
+    "message": "Analyze this lead: residential project, ₹15 lakh budget, needs crane next week",
+    "user_id": "sales@aspcranes.com",
     "crm_access": true
   }'
 ```
@@ -201,18 +203,19 @@ DATABASE_URL=postgresql://user:pass@host:port/database
 
 ## 🔧 Development
 
-### Adding New Tools
+### Adding New Sales Tools
 1. Add tool function to `packages/agent/sales_service/tools/tools.py`
 2. Register tool in agent configuration
 3. Test with API calls
 
-### Database Operations
-Use the database abstraction layer:
+### Sales Operations
+Use the database abstraction layer for sales operations:
 ```python
 from sales_service.integrations.database_service import DatabaseServiceFactory
 
 db_service = DatabaseServiceFactory.get_default_service()
 equipment = db_service.get_available_equipment()
+leads = db_service.get_leads()
 ```
 
 ## 📄 License
@@ -227,5 +230,5 @@ For technical support or questions:
 
 ---
 
-**Built with ❤️ for ASP Cranes heavy equipment rental solutions**
+**Built with ❤️ for ASP Cranes sales team and heavy equipment rental solutions**
 - Required dependencies (run `npm install` in the root and `pip install -r requirements_crm.txt` in packages/agent)
