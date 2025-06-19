@@ -43,6 +43,12 @@ firebase-service-account.json
 package-lock.json
 yarn.lock
 
+# Auto-generated or temporary Python files
+debug_agent.py
+api_server.py
+simple_api_server.py
+robust_api_server.py
+
 # IDE and Editor files
 .vscode/
 .idea/
