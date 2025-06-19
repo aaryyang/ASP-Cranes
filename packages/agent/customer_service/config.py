@@ -28,17 +28,25 @@ class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "../.env"),
-        env_prefix="GOOGLE_",
         case_sensitive=True,
+        extra='ignore'
     )
 
     agent_settings: AgentModel = Field(default=AgentModel())
     app_name: str = "customer_service_app"
+    FLASK_ENV: str = Field(default="production")
     GOOGLE_CLOUD_PROJECT: str = Field(default="my_project")
     GOOGLE_CLOUD_LOCATION: str = Field(default="us-central1")
-    GENAI_USE_VERTEXAI: str = Field(default="1")
-    API_KEY: str | None = Field(default="")
-    APPLICATION_CREDENTIALS: str = Field(default="service-account.json")
+    GOOGLE_GENAI_USE_VERTEXAI: str = Field(default="1")
+    GOOGLE_API_KEY: str | None = Field(default="")
+    GOOGLE_APPLICATION_CREDENTIALS: str = Field(default="service-account.json")
+    
+    # Database Configuration
+    DATABASE_TYPE: str = Field(default="firebase")
+    
+    # Firebase Configuration
+    FIREBASE_PROJECT: str = Field(default="ai-crm-database")
+    FIREBASE_CREDENTIALS: str = Field(default="firebase-service-account.json")
     
     # CRM Integration Settings
     CRM_WEBHOOK_URL: str = Field(default="")
@@ -51,9 +59,9 @@ class Config(BaseSettings):
 config = Config()
 
 # Assert service account exists
-if not os.path.exists(config.APPLICATION_CREDENTIALS):
+if not os.path.exists(config.GOOGLE_APPLICATION_CREDENTIALS):
     raise FileNotFoundError(
-        f"Service account not found at {config.APPLICATION_CREDENTIALS}")
+        f"Service account not found at {config.GOOGLE_APPLICATION_CREDENTIALS}")
 
 # Load Google credentials
 credentials, project_id = google_auth_default()

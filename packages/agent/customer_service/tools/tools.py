@@ -17,6 +17,11 @@ import logging
 import uuid
 from datetime import datetime
 from customer_service.integrations.crm_sync import crm_sync
+# Import database service for CRM access (supports Firebase and PostgreSQL)
+from customer_service.integrations.database_service import DatabaseServiceFactory
+
+# Get database service instance (defaults to Firebase)
+db_service = DatabaseServiceFactory.get_default_service()
 
 logger = logging.getLogger(__name__)
 
@@ -664,3 +669,249 @@ def generate_project_quote(
             "Complete insurance and permit documentation"
         ]
     }
+
+
+def get_user_info(user_id: str) -> dict:
+    """
+    Get user information from CRM for personalization.
+    
+    Args:
+        user_id: The ID of the user to get information for
+        
+    Returns:
+        Dictionary containing user info or error message
+    """
+    try:
+        user_data = db_service.get_user_by_id(user_id)
+        
+        if not user_data:
+            return {
+                "success": False,
+                "error": "User not found",
+                "user_info": {
+                    "name": "Customer",
+                    "role": "unknown"
+                }
+            }
+            
+        # Return only needed user information for personalization
+        return {
+            "success": True,
+            "user_info": {
+                "id": user_id,
+                "name": user_data.get("name", "Customer"),
+                "email": user_data.get("email", ""),
+                "role": user_data.get("role", "unknown")
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting user info: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "user_info": {
+                "name": "Customer",
+                "role": "unknown"
+            }
+        }
+
+def get_available_equipment() -> dict:
+    """
+    Get a list of available equipment for scheduling.
+    
+    Returns:
+        Dictionary containing equipment list or error message
+    """
+    try:
+        equipment_list = db_service.get_available_equipment()
+        
+        return {
+            "success": True,
+            "count": len(equipment_list),
+            "equipment": equipment_list
+        }
+    except Exception as e:
+        logger.error(f"Error getting available equipment: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "equipment": []
+        }
+
+def create_new_lead(
+    customer_name: str,
+    email: str,
+    phone: str,
+    service_needed: str,
+    site_location: str,
+    start_date: str,
+    rental_days: int,
+    shift_timing: str,
+    company_name: str = "",
+    designation: str = "",
+    notes: str = ""
+) -> dict:
+    """
+    Creates a new lead in the CRM system.
+    
+    Args:
+        customer_name: Name of the customer
+        email: Email address
+        phone: Phone number
+        service_needed: Type of service/equipment needed
+        site_location: Location of the site
+        start_date: Start date in YYYY-MM-DD format
+        rental_days: Number of days for rental
+        shift_timing: Shift timing (Day/Night/Both)
+        company_name: Optional company name
+        designation: Optional job title
+        notes: Optional additional notes
+        
+    Returns:
+        Dictionary containing success status and lead ID
+    """
+    try:
+        # Create the lead object
+        lead_data = {
+            "customerName": customer_name,
+            "email": email,
+            "phone": phone,
+            "serviceNeeded": service_needed,
+            "siteLocation": site_location,
+            "startDate": start_date,
+            "rentalDays": rental_days,
+            "shiftTiming": shift_timing,
+            "status": "new",
+            "assignedTo": "",  # Will be assigned by CRM admin or sales manager
+            "companyName": company_name,
+            "designation": designation,
+            "notes": notes
+        }
+        
+        # Add lead to CRM database
+        lead_id = db_service.create_lead(lead_data)
+        
+        if not lead_id:
+            return {
+                "success": False,
+                "error": "Failed to create lead in database"
+            }
+            
+        return {
+            "success": True,
+            "lead_id": lead_id,
+            "message": "Lead created successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating lead: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+def schedule_job(
+    lead_id: str,
+    customer_name: str,
+    equipment_id: str,
+    start_date: str,
+    end_date: str,
+    location: str,
+    operator_id: str = "",
+    notes: str = ""
+) -> dict:
+    """
+    Schedules a job in the CRM system.
+    
+    Args:
+        lead_id: ID of the associated lead
+        customer_name: Name of the customer
+        equipment_id: ID of the equipment to schedule
+        start_date: Start date in YYYY-MM-DD format
+        end_date: End date in YYYY-MM-DD format
+        location: Job location
+        operator_id: Optional operator ID
+        notes: Optional additional notes
+        
+    Returns:
+        Dictionary containing success status and job ID
+    """
+    try:
+        # Create the job object
+        job_data = {
+            "leadId": lead_id,
+            "customerName": customer_name,
+            "equipmentId": equipment_id,
+            "operatorId": operator_id,
+            "status": "scheduled",
+            "startDate": start_date,
+            "endDate": end_date,
+            "location": location,
+            "notes": notes
+        }
+        
+        # Add job to CRM database
+        job_id = db_service.schedule_job(job_data)
+        
+        if not job_id:
+            return {
+                "success": False,
+                "error": "Failed to schedule job in database"
+            }
+            
+        return {
+            "success": True,
+            "job_id": job_id,
+            "message": "Job scheduled successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error scheduling job: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+def get_customer_info(customer_id: str = "", email: str = "") -> dict:
+    """
+    Get customer information from CRM database.
+    
+    Args:
+        customer_id: Optional ID of the customer
+        email: Optional email of the customer
+        
+    Returns:
+        Dictionary containing customer info or error message
+    """
+    try:
+        customer_data = None
+        
+        if customer_id:
+            customer_data = db_service.get_customer_by_id(customer_id)
+        elif email:
+            # Get customers and filter by email
+            customers = db_service.get_customers(limit=100)
+            for customer in customers:
+                if customer.get("email") == email:
+                    customer_data = customer
+                    break
+        
+        if not customer_data:
+            return {
+                "success": False,
+                "error": "Customer not found",
+                "customer_info": {}
+            }
+            
+        return {
+            "success": True,
+            "customer_info": customer_data
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting customer info: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "customer_info": {}
+        }

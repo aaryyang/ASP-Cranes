@@ -62,16 +62,16 @@ class CommunicationPreferences(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class GardenProfile(BaseModel):
+class EquipmentProfile(BaseModel):
     """
-    Represents a customer's garden profile.
+    Represents a customer's equipment profile and preferences.
     """
 
-    type: str
-    size: str
-    sun_exposure: str
-    soil_type: str
-    interests: List[str]
+    preferred_equipment_types: List[str] = Field(default_factory=list)
+    job_site_type: str = "construction"
+    lift_capacity_needed: str = "medium"
+    typical_duration: str = "week"
+    special_requirements: List[str] = Field(default_factory=list)
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -93,7 +93,7 @@ class Customer(BaseModel):
     loyalty_points: int
     preferred_store: str
     communication_preferences: CommunicationPreferences
-    garden_profile: GardenProfile
+    equipment_profile: EquipmentProfile
     scheduled_appointments: Dict = Field(default_factory=dict)
     model_config = ConfigDict(from_attributes=True)
 
@@ -136,62 +136,62 @@ class Customer(BaseModel):
                     date="2023-03-05",
                     items=[
                         Product(
-                            product_id="fert-111",
-                            name="All-Purpose Fertilizer",
+                            product_id="crane-101",
+                            name="30-ton Mobile Crane Rental",
                             quantity=1,
                         ),
                         Product(
-                            product_id="trowel-222",
-                            name="Gardening Trowel",
-                            quantity=1,
+                            product_id="operator-202",
+                            name="Crane Operator Service",
+                            quantity=3,
                         ),
                     ],
-                    total_amount=35.98,
+                    total_amount=3500.00,
                 ),
                 Purchase(
                     date="2023-07-12",
                     items=[
                         Product(
-                            product_id="seeds-333",
-                            name="Tomato Seeds (Variety Pack)",
+                            product_id="lift-303",
+                            name="Boom Lift Rental",
                             quantity=2,
                         ),
                         Product(
-                            product_id="pots-444",
-                            name="Terracotta Pots (6-inch)",
-                            quantity=4,
+                            product_id="transport-404",
+                            name="Equipment Transport Service",
+                            quantity=1,
                         ),
                     ],
-                    total_amount=42.5,
+                    total_amount=2250.00,
                 ),
                 Purchase(
                     date="2024-01-20",
                     items=[
                         Product(
-                            product_id="gloves-555",
-                            name="Gardening Gloves (Leather)",
+                            product_id="crawler-505",
+                            name="Crawler Crane Weekly Rental",
                             quantity=1,
                         ),
                         Product(
-                            product_id="pruner-666",
-                            name="Pruning Shears",
+                            product_id="inspect-606",
+                            name="Site Inspection Service",
                             quantity=1,
                         ),
                     ],
-                    total_amount=55.25,
+                    total_amount=5525.00,
                 ),
             ],
             loyalty_points=133,
-            preferred_store="Anytown Garden Store",
+            preferred_store="ASP Crane Rentals Main Office",
             communication_preferences=CommunicationPreferences(
                 email=True, sms=False, push_notifications=True
             ),
-            garden_profile=GardenProfile(
-                type="backyard",
-                size="medium",
-                sun_exposure="full sun",
-                soil_type="unknown",
-                interests=["flowers", "vegetables"],
+            equipment_profile=EquipmentProfile(
+                preferred_equipment_types=["crawler cranes", "mobile cranes"],
+                job_site_type="construction",
+                lift_capacity_needed="30 tons",
+                typical_duration="weekly",
+                special_requirements=["confined space", "high reach"],
             ),
             scheduled_appointments={},
         )

@@ -27,7 +27,12 @@ from .tools.tools import (
     schedule_equipment_rental,
     get_equipment_schedule,
     calculate_equipment_pricing,
-    generate_project_quote
+    generate_project_quote,
+    get_user_info,
+    get_available_equipment,
+    create_new_lead,
+    schedule_job,
+    get_customer_info
 )
 from .integrations.crm_sync import crm_sync
 
@@ -40,17 +45,26 @@ configs = Config()
 logger = logging.getLogger(__name__)
 
 # ===================== ADDED BLOCK FOR CREDENTIALS ===================== #
-# If not running inside GCP, load credentials from JSON and configure manually
-if not os.environ.get("GOOGLE_CLOUD_PROJECT"):
-    from google.auth import load_credentials_from_file
-    from google.generativeai import configure as configure_genai
+# Force use of service account credentials and project
+import json
+from google.auth import load_credentials_from_file
+from google.generativeai import configure as configure_genai
 
-    creds_path = configs.APPLICATION_CREDENTIALS or "service-account.json"
-    credentials, project_id = load_credentials_from_file(
-        creds_path, scopes=["https://www.googleapis.com/auth/cloud-platform"])
-    configure_genai(credentials=credentials)
-    logger.info(
-        f"Using local service account: {creds_path} for project: {project_id}")
+creds_path = configs.GOOGLE_APPLICATION_CREDENTIALS or "service-account.json"
+
+# Load the service account file to get the project ID
+with open(creds_path, 'r') as f:
+    service_account_info = json.load(f)
+    project_id = service_account_info['project_id']
+
+# Set the project environment variable to ensure consistency
+os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+
+credentials, _ = load_credentials_from_file(
+    creds_path, scopes=["https://www.googleapis.com/auth/cloud-platform"])
+configure_genai(credentials=credentials)
+logger.info(
+    f"Using local service account: {creds_path} for project: {project_id}")
 # ======================================================================= #
 
 # Create the root agent
@@ -60,12 +74,20 @@ root_agent = Agent(
     instruction=INSTRUCTION,
     name=configs.agent_settings.name,
     tools=[
+        # Lead generation tools
         capture_lead_information,
         check_equipment_availability,
         schedule_equipment_rental,
         get_equipment_schedule,
         calculate_equipment_pricing,
         generate_project_quote,
+        
+        # CRM integration tools
+        get_user_info,
+        get_available_equipment,
+        create_new_lead,
+        schedule_job,
+        get_customer_info,
     ],
     before_tool_callback=before_tool,
     after_tool_callback=after_tool,

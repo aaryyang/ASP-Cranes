@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 interface AssistantState {
   isOpen: boolean;
@@ -8,16 +7,9 @@ interface AssistantState {
   closeAssistant: () => void;
 }
 
-export const useAssistantStore = create<AssistantState>()(
-  persist(
-    (set) => ({
-      isOpen: false,
-      toggleAssistant: () => set((state) => ({ isOpen: !state.isOpen })),
-      openAssistant: () => set({ isOpen: true }),
-      closeAssistant: () => set({ isOpen: false }),
-    }),
-    {
-      name: 'assistant-storage',
-    }
-  )
-);
+export const useAssistantStore = create<AssistantState>()((set) => ({
+  isOpen: false, // Always start closed
+  toggleAssistant: () => set((state) => ({ isOpen: !state.isOpen })),
+  openAssistant: () => set({ isOpen: true }),
+  closeAssistant: () => set({ isOpen: false }),
+}));

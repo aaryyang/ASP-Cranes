@@ -16,6 +16,7 @@
 
 import logging
 import time
+import json
 
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import LlmRequest
@@ -185,9 +186,45 @@ def before_agent(callback_context: InvocationContext):
     # In a production agent, this is set as part of the
     # session creation for the agent. 
     if "customer_profile" not in callback_context.state:
-        callback_context.state["customer_profile"] = Customer.get_customer(
-            "123"
-        ).to_json()
+        # Try to get user_id from session state
+        user_id = callback_context.state.get('current_user_id', 'MangoTheMonkey')
+        
+        # Use database service to get real user data instead of dummy data
+        try:
+            from customer_service.integrations.database_service import DatabaseServiceFactory
+            db_service = DatabaseServiceFactory.get_default_service()
+            user_data = db_service.get_user_by_id(user_id)
+            
+            if user_data:
+                # Create a simplified customer profile from Firebase user data
+                customer_profile = {
+                    "customer_id": user_id,
+                    "name": user_data.get("name", "Customer"),
+                    "email": user_data.get("email", ""),
+                    "role": user_data.get("role", "customer")
+                }
+                callback_context.state["customer_profile"] = json.dumps(customer_profile)
+                logger.info(f"Loaded customer profile for user: {user_id}")
+            else:
+                # No user found - set minimal profile indicating unknown user
+                unknown_profile = {
+                    "customer_id": user_id,
+                    "name": "Unknown User",
+                    "email": "",
+                    "role": "guest"
+                }
+                callback_context.state["customer_profile"] = json.dumps(unknown_profile)
+                logger.warning(f"No user found for ID: {user_id}, using unknown user profile")
+        except Exception as e:
+            logger.error(f"Error getting user data: {e}")
+            # Use a minimal error profile
+            error_profile = {
+                "customer_id": user_id,
+                "name": "Unknown User",
+                "email": "",
+                "role": "guest"
+            }
+            callback_context.state["customer_profile"] = json.dumps(error_profile)
 
     # logger.info(callback_context.state["customer_profile"])
     

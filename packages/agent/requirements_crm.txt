@@ -10,3 +10,4 @@ requests
 nest_asyncio
 flask-cors
 jsonschema
+firebase-admin==6.2.0

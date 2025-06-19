@@ -16,9 +16,39 @@ export const assistantService = {
   // Cache session IDs for each user
   _sessionIds: new Map<string, string>(),
   
-  async sendMessage(message: string): Promise<string> {
+  // Load session IDs from localStorage on module initialization
+  _loadSessionIds() {
     try {
-      const userId = getUserId() || 'crm_user';
+      const savedSessionIds = localStorage.getItem('asp-cranes-session-ids');
+      if (savedSessionIds) {
+        const sessions = JSON.parse(savedSessionIds);
+        Object.entries(sessions).forEach(([userId, sessionId]) => {
+          this._sessionIds.set(userId, sessionId as string);
+        });
+        console.log("Loaded saved session IDs from localStorage");
+      }
+    } catch (e) {
+      console.error("Error loading session IDs:", e);
+    }
+  },
+  
+  // Initialize sessions from localStorage
+  _initSessions() {
+    if (this._sessionIds.size === 0) {
+      this._loadSessionIds();
+    }
+  },
+  
+  async sendMessage(message: string, specificUserId?: string): Promise<string> {
+    // Initialize sessions from localStorage on first use
+    this._initSessions();
+    
+    try {
+      // Use the provided user ID or get it from the current auth state
+      // IMPORTANT: specificUserId should come from the auth store, not just a parameter
+      const userId = specificUserId || getUserId() || 'crm_user';
+      
+      console.log("Using user ID for message:", userId);
       
       // Store the user message
       await addDoc(collection(db, 'assistant_messages'), {
@@ -30,7 +60,6 @@ export const assistantService = {
 
       // Get the session ID for this user if it exists
       const sessionId = this._sessionIds.get(userId);
-      
       console.log('Sending message to ASP Cranes Agent:', { message, userId, sessionId });
 
       // Call the ASP Cranes Agent API
@@ -42,7 +71,8 @@ export const assistantService = {
         body: JSON.stringify({ 
           message,
           user_id: userId,
-          session_id: sessionId // Pass existing session ID or null to create new one
+          session_id: sessionId, // Pass existing session ID or null to create new one
+          crm_access: true // Indicate that the agent should have CRM access
         }),
       });
 
@@ -59,11 +89,17 @@ export const assistantService = {
         console.error('Missing response field in agent reply:', data);
         throw new Error('Invalid response format from ASP Cranes Agent');
       }
-      
-      // Save the session ID for future messages from this user
+        // Save the session ID for future messages from this user
       if (data.session_id) {
         this._sessionIds.set(userId, data.session_id);
         console.log('Saved session ID for user:', { userId, sessionId: data.session_id });
+        
+        // Save to localStorage for persistence across page refreshes
+        const sessionsObj: Record<string, string> = {};
+        this._sessionIds.forEach((value, key) => {
+          sessionsObj[key] = value;
+        });
+        localStorage.setItem('asp-cranes-session-ids', JSON.stringify(sessionsObj));
       }
 
       // Store the assistant's response
