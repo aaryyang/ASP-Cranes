@@ -186,8 +186,8 @@ def before_agent(callback_context: InvocationContext):
     # In a production agent, this is set as part of the
     # session creation for the agent. 
     if "customer_profile" not in callback_context.state:
-        # Try to get user_id from session state
-        user_id = callback_context.state.get('current_user_id', 'MangoTheMonkey')
+        # Try to get user_id from session state - use a generic value if not available
+        user_id = callback_context.state.get('current_user_id', 'sales_user')
         
         # Use database service to get real user data instead of dummy data
         try:

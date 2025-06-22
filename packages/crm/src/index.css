@@ -45,7 +45,16 @@
   }
 
   .assistant-message.prose li {
-    margin: 0.25rem 0;
+    margin-bottom: 1.5rem;
+  }
+  
+  .assistant-message.prose li:last-child {
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Ensure double line breaks in markdown are preserved */
+  .assistant-message.prose p {
+    margin: 1rem 0;
   }
 
   .assistant-message.prose h1,

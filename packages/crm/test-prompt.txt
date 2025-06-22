@@ -1,0 +1,10 @@
+Can you analyze this construction project for me?
+
+Project details:
+- Type: High-rise residential building (30 floors)
+- Location: Mumbai central
+- Timeline: Starting next month, duration 24 months
+- Budget for crane rental: ₹25 lakhs
+- Special requirements: Need to lift heavy precast concrete panels
+
+What equipment would you recommend and is this budget feasible?

@@ -35,14 +35,13 @@ export function AIAssistantWidget() {
   useEffect(() => {
     loadRecentMessages();
     hasMounted.current = true;
-  }, []);
-
-  useEffect(() => {
+  }, []);  useEffect(() => {
     if (isOpen && hasMounted.current && messages.length === 0) {
-      const userName = user?.name || "MangoTheMonkey";
+      // Use actual user name from profile, or a default if not available
+      const userName = user?.name || "Sales Team";
       const welcomeMessage = {
         role: 'assistant' as const,
-        content: `Hello, ${userName}! How can I assist you with your crane equipment needs today?`
+        content: `Hello, ${userName}! How can I assist you with your crane equipment sales today?`
       };
       setMessages([welcomeMessage]);
       const userChatKey = user?.id ? `asp-cranes-chat-messages-${user.id}` : 'asp-cranes-chat-messages';
@@ -197,8 +196,17 @@ export function AIAssistantWidget() {
                     : 'bg-gray-100 text-gray-900'
                     }`}
                 >                  {message.role === 'assistant' ? (
-                    <div className="text-sm assistant-message prose prose-sm max-w-none">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    <div className="text-sm assistant-message prose prose-sm max-w-none break-words">
+                      <ReactMarkdown
+                        components={{
+                          // Ensure all paragraphs have proper spacing
+                          p: ({node, ...props}) => <p className="my-4" {...props} />,
+                          // Add extra spacing between list items
+                          li: ({node, children, ...props}) => <li className="mb-6" {...props}>{children}</li>
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
                     </div>
                   ) : (
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>

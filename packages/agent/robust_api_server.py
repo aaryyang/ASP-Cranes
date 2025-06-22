@@ -10,7 +10,7 @@ import uuid
 import nest_asyncio
 import json
 import re
-import re
+from datetime import datetime
 
 from flask import Flask, request, make_response, jsonify
 from flask_cors import CORS
@@ -90,7 +90,8 @@ def chat_with_agent():
                     # Add CRM context for ALL messages from authenticated users, not just greetings
                     if crm_access:
                         logger.info(f"CRM access enabled for this session")
-            except Exception as e:logger.error(f"Error getting user info: {e}")
+            except Exception as e:
+                logger.error(f"Error getting user info: {e}")
 
         # If no session_id provided, generate one (1st message)
         session_id = data.get('session_id')
@@ -108,11 +109,11 @@ def chat_with_agent():
             elif any(keyword in message.lower() for keyword in ["equipment", "cranes", "machines", "rent", "rental", "available"]):
                 user_context = f"IMPORTANT: The user is {user_info['name']} with role {user_info['role']} and is asking about equipment. Use the get_available_equipment tool to provide information about what equipment is available. Never say there's no equipment without checking."
             else:
-                user_context = f"IMPORTANT: You are speaking with {user_info['name']} who has the role of {user_info['role']} in the system. Always remember their name throughout the conversation and personalize your responses."
+                user_context = f"You are assisting a user with the role of {user_info['role']} in the system. Their username is {user_info['name']}."
 
             # Add CRM capabilities context for authenticated users
             if crm_access:
-                user_context += " You have access to the CRM system and can lookup equipment, create leads, check schedules, and access customer information. If asked about 'who am I', tell them their name and role in the system."
+                user_context += " You have access to the CRM system and can lookup equipment, create leads, check schedules, and access customer information. Only if directly asked 'who am I', tell them their name and role in the system."
 
             logger.info(f"Adding personalization context: {user_context}")
             # Add context at the beginning to make sure LLM incorporates it
@@ -182,15 +183,18 @@ async def run_agent(user_id: str, session_id: str, content: types.Content) -> st
             # Log event details to understand structure
             event_type = type(event).__name__
             event_author = getattr(event, 'author', 'unknown')
-            logger.info(f"Event: type={event_type}, author={event_author}")
-            
-            # Extract text from various event structures
+            logger.info(f"Event: type={event_type}, author={event_author}")            # Extract text from various event structures
             extracted_text = extract_text_from_event(event)
             if extracted_text:
-                logger.info(f"Extracted text ({len(extracted_text)} chars): {extracted_text[:50]}...")
+                # Log in a cleaner format
+                preview = extracted_text[:50].replace('\n', ' ').strip()
+                if len(extracted_text) > 50:
+                    preview += "..."
+                logger.info(f"Response content: {preview}")
                 response_parts.append(extracted_text)
             else:
-                logger.debug(f"No text extracted from event: {event}")
+                # For debug purposes, cleaner log
+                logger.debug(f"No text in event: {event_type} from {event_author}")
         
         final_response = "".join(response_parts)
         
@@ -198,10 +202,13 @@ async def run_agent(user_id: str, session_id: str, content: types.Content) -> st
             logger.warning("No response was collected from agent events")
             return "I apologize, but I'm having trouble processing your request right now."
         
-        # Apply formatting to enhance bold text appearance
+        # Apply formatting to ensure markdown is preserved
         formatted_response = format_response(final_response)
         
-        logger.info(f"Final response built (length={len(final_response)})")
+        # Log formatted response preview for debugging
+        logger.info(f"Final response built (length={len(formatted_response)})")
+        logger.info(f"Response preview: {formatted_response[:100].replace('\n', '\\n')}...")
+        
         return formatted_response
         
     except Exception as e:
@@ -254,32 +261,33 @@ def format_response(text):
         text: The response text from the agent
         
     Returns:
-        Formatted text with minimal, appropriate HTML formatting
+        Formatted text with proper markdown formatting preserved
     """
-    # Minimal formatting - only bold really important information
+    # Start with the original text
     formatted = text
     
-    # Only bold very specific, important information
-    important_patterns = [
-        # Equipment specifications and pricing
-        (r'(\d+[\-\s]ton\s+\w+)', r'<b>\1</b>'),  # "30-ton Mobile Crane"
-        (r'(\$\d+(?:,\d{3})*(?:\.\d{2})?)', r'<b>\1</b>'),  # "$2,500.00"
-        
-        # Equipment model numbers
-        (r'\b(ASP-\w+(?:[\-\w]*)?)\b', r'<b>\1</b>'),  # "ASP-30T-Mobile"
-        
-        # Status indicators only when clearly stating availability
-        (r'\b(Available|Unavailable|In Use|Scheduled)\b', r'<b>\1</b>'),
-    ]
+    # IMPORTANT: Remove any HTML tags that might have been inserted
+    # Replace HTML tags with their markdown equivalents or remove them
+    formatted = re.sub(r'<b>(.*?)</b>', r'**\1**', formatted)  # Bold
+    formatted = re.sub(r'<strong>(.*?)</strong>', r'**\1**', formatted)  # Strong
+    formatted = re.sub(r'<i>(.*?)</i>', r'_\1_', formatted)  # Italic
+    formatted = re.sub(r'<em>(.*?)</em>', r'_\1_', formatted)  # Emphasis
+    formatted = re.sub(r'<br\s*/?>', '\n\n', formatted)  # Line breaks to double newlines
     
-    # Apply patterns carefully
-    for pattern, replacement in important_patterns:
-        formatted = re.sub(pattern, replacement, formatted, flags=re.IGNORECASE)
+    # Remove any remaining HTML tags
+    formatted = re.sub(r'<[^>]*>', '', formatted)
     
-    # Ensure proper spacing around punctuation and line breaks
-    formatted = re.sub(r'([.!?])\s*([A-Z])', r'\1 \2', formatted)  # Space after sentence endings
-    formatted = re.sub(r'\s+', ' ', formatted)  # Remove multiple spaces
-    formatted = formatted.strip()  # Remove leading/trailing whitespace
+    # Ensure double line breaks between numbered points
+    formatted = re.sub(r'(\d+\..*?)(\n)(\d+\.)', r'\1\n\n\3', formatted)
+    
+    # Ensure specific patterns use markdown formatting
+    # DON'T replace existing markdown formatting
+    
+    # Preserve existing newlines and spacing in markdown lists
+    # Don't collapse whitespace in markdown formatting
+    
+    # Log the formatting changes for debugging
+    logger.info(f"Response formatting applied: {len(text)} chars → {len(formatted)} chars")
     
     return formatted
 
